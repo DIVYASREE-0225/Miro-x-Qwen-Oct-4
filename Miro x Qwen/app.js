@@ -29,21 +29,14 @@ const reference = new Image();
 let referenceLoaded = false;
 
 reference.onload = function () {
-
     referenceLoaded = true;
-
     drawPoster();
-
 };
 
 reference.onerror = function () {
-
-    alert(
-        "reference.png could not be loaded.\n\n" +
-        "Make sure reference.png is in the same folder " +
-        "as index.html."
+    console.error(
+        "reference.png could not be loaded."
     );
-
 };
 
 reference.src = "reference.png";
@@ -66,6 +59,41 @@ let userName = "";
 
 
 /* =========================================================
+   PHOTO FRAME
+========================================================= */
+
+const PHOTO = {
+
+    centerX: 472,
+    centerY: 500,
+
+    width: 390,
+    height: 315,
+
+    angle: -4.2
+
+};
+
+
+/* =========================================================
+   NAME BAR
+   KEEPING YOUR EXISTING POSITION
+========================================================= */
+
+const NAME_BOX = {
+
+    centerX: 493,
+    centerY: 712,
+
+    width: 399,
+    height: 67,
+
+    angle: -4.2
+
+};
+
+
+/* =========================================================
    PHOTO UPLOAD
 ========================================================= */
 
@@ -81,12 +109,20 @@ photoInput.addEventListener(
         }
 
 
-        /* Check file type */
+        /* Supported formats */
 
-        if (!file.type.startsWith("image/")) {
+        const allowedTypes = [
+            "image/jpeg",
+            "image/jpg",
+            "image/png",
+            "image/webp"
+        ];
+
+
+        if (!allowedTypes.includes(file.type)) {
 
             alert(
-                "Please upload a valid JPG, PNG or WEBP image."
+                "Please upload a JPG, JPEG, PNG or WEBP image."
             );
 
             photoInput.value = "";
@@ -95,7 +131,7 @@ photoInput.addEventListener(
         }
 
 
-        /* Read uploaded image */
+        /* Read image */
 
         const reader =
             new FileReader();
@@ -161,8 +197,6 @@ nameInput.addEventListener(
 
 function drawPoster() {
 
-    /* Clear canvas */
-
     ctx.clearRect(
         0,
         0,
@@ -170,8 +204,6 @@ function drawPoster() {
         HEIGHT
     );
 
-
-    /* Wait for reference */
 
     if (!referenceLoaded) {
         return;
@@ -217,147 +249,115 @@ function drawPoster() {
 
 function drawUserPhoto() {
 
-    /*
-        PHOTO SETTINGS
-
-        Change these values only if you want
-        to adjust the photo position/size.
-    */
-
-    const photo = {
-
-        /* LEFT / RIGHT */
-
-        centerX: 472,
-
-        /* UP / DOWN */
-
-        centerY: 500,
-
-        /* PHOTO WIDTH */
-
-        width: 390,
-
-        /* PHOTO HEIGHT */
-
-        height: 315,
-
-        /* PHOTO TILT */
-
-        angle: -4.2
-
-    };
-
-
-    /* Convert degrees to radians */
-
     const angle =
-        photo.angle * Math.PI / 180;
+        PHOTO.angle * Math.PI / 180;
 
 
     ctx.save();
 
 
     /* =====================================================
-       MOVE TO PHOTO CENTER
+       PHOTO CENTER
     ===================================================== */
 
     ctx.translate(
-        photo.centerX,
-        photo.centerY
+        PHOTO.centerX,
+        PHOTO.centerY
     );
 
 
     /* =====================================================
-       APPLY PHOTO TILT
+       PHOTO TILT
     ===================================================== */
 
     ctx.rotate(angle);
 
 
     /* =====================================================
-       PHOTO BOX CLIPPING
+       CLIP EXACTLY TO PHOTO FRAME
     ===================================================== */
 
     ctx.beginPath();
 
     ctx.rect(
-        -photo.width / 2,
-        -photo.height / 2,
-        photo.width,
-        photo.height
+        -PHOTO.width / 2,
+        -PHOTO.height / 2,
+        PHOTO.width,
+        PHOTO.height
     );
 
     ctx.clip();
 
 
     /* =====================================================
-       WHITE BASE
+       ORIGINAL IMAGE DIMENSIONS
     ===================================================== */
 
-    ctx.fillStyle =
-        "#ffffff";
-
-    ctx.fillRect(
-        -photo.width / 2,
-        -photo.height / 2,
-        photo.width,
-        photo.height
-    );
-
-
-    /* =====================================================
-       ORIGINAL IMAGE SIZE
-    ===================================================== */
-
-    const sourceWidth =
+    const imageWidth =
         userPhoto.naturalWidth;
 
-    const sourceHeight =
+    const imageHeight =
         userPhoto.naturalHeight;
 
 
     /* =====================================================
-       DRAW COMPLETE IMAGE
+       COVER CALCULATION
 
-       IMPORTANT:
+       This makes the uploaded photo completely
+       occupy the 390 × 315 frame.
 
-       We intentionally DO NOT use Math.min()
-       or Math.max() here.
+       It preserves the original aspect ratio.
+    ===================================================== */
 
-       The complete uploaded image is resized
-       directly into the photo box.
+    const scale =
+        Math.max(
+            PHOTO.width / imageWidth,
+            PHOTO.height / imageHeight
+        );
 
-       Therefore:
 
-       ✔ No cropping
-       ✔ No white space
-       ✔ Complete photo visible
-       ✔ Entire photo box filled
+    /* =====================================================
+       SCALED IMAGE SIZE
+    ===================================================== */
 
-       The image may stretch slightly if its
-       original aspect ratio differs from the
-       poster photo box.
+    const scaledWidth =
+        imageWidth * scale;
+
+    const scaledHeight =
+        imageHeight * scale;
+
+
+    /* =====================================================
+       CENTER THE IMAGE
+    ===================================================== */
+
+    const x =
+        (PHOTO.width - scaledWidth) / 2
+        - PHOTO.width / 2;
+
+
+    const y =
+        (PHOTO.height - scaledHeight) / 2
+        - PHOTO.height / 2;
+
+
+    /* =====================================================
+       DRAW PHOTO
     ===================================================== */
 
     ctx.drawImage(
 
         userPhoto,
 
-        /* Source image */
-
         0,
         0,
-        sourceWidth,
-        sourceHeight,
+        imageWidth,
+        imageHeight,
 
-        /* Destination */
-
-        -photo.width / 2,
-        -photo.height / 2,
-
-        photo.width,
-        photo.height
+        x,
+        y,
+        scaledWidth,
+        scaledHeight
 
     );
 
@@ -373,56 +373,24 @@ function drawUserPhoto() {
 
 function drawUserName() {
 
-    /*
-        NAME BAR
-
-        These values are intentionally kept
-        the same as your previous version.
-    */
-
-    const box = {
-
-        centerX: 493,
-
-        centerY: 712,
-
-        width: 399,
-
-        height: 67,
-
-        angle: -4.2
-
-    };
-
-
-    /* Convert angle to radians */
-
     const angle =
-        box.angle * Math.PI / 180;
+        NAME_BOX.angle * Math.PI / 180;
 
 
     ctx.save();
 
 
-    /* =====================================================
-       MOVE TO NAME BAR
-    ===================================================== */
-
     ctx.translate(
-        box.centerX,
-        box.centerY
+        NAME_BOX.centerX,
+        NAME_BOX.centerY
     );
 
-
-    /* =====================================================
-       APPLY NAME BAR TILT
-    ===================================================== */
 
     ctx.rotate(angle);
 
 
     /* =====================================================
-       COVER ORIGINAL NAME
+       NAME BACKGROUND
     ===================================================== */
 
     ctx.fillStyle =
@@ -433,11 +401,11 @@ function drawUserName() {
 
         ctx,
 
-        -box.width / 2,
-        -box.height / 2,
+        -NAME_BOX.width / 2,
+        -NAME_BOX.height / 2,
 
-        box.width,
-        box.height,
+        NAME_BOX.width,
+        NAME_BOX.height,
 
         30
 
@@ -448,24 +416,12 @@ function drawUserName() {
 
 
     /* =====================================================
-       GET USER NAME
+       NAME
     ===================================================== */
 
     let name =
-        userName;
+        userName || "Your Name";
 
-
-    if (!name) {
-
-        name =
-            "Your Name";
-
-    }
-
-
-    /* =====================================================
-       TEXT SETTINGS
-    ===================================================== */
 
     ctx.textAlign =
         "center";
@@ -481,8 +437,7 @@ function drawUserName() {
        AUTOMATIC FONT SIZE
     ===================================================== */
 
-    let fontSize =
-        34;
+    let fontSize = 34;
 
 
     while (fontSize > 18) {
@@ -494,7 +449,7 @@ function drawUserName() {
         if (
             ctx.measureText(name).width
             <=
-            box.width * 0.90
+            NAME_BOX.width * 0.90
         ) {
 
             break;
@@ -518,7 +473,7 @@ function drawUserName() {
     while (
         ctx.measureText(displayName).width
         >
-        box.width * 0.90
+        NAME_BOX.width * 0.90
         &&
         displayName.length > 3
     ) {
@@ -531,8 +486,6 @@ function drawUserName() {
 
     }
 
-
-    /* Add ... if shortened */
 
     if (
         displayName !== name
@@ -583,23 +536,17 @@ function roundedRect(
     ctx.beginPath();
 
 
-    /* TOP LEFT */
-
     ctx.moveTo(
         x + r,
         y
     );
 
 
-    /* TOP */
-
     ctx.lineTo(
         x + width - r,
         y
     );
 
-
-    /* TOP RIGHT */
 
     ctx.quadraticCurveTo(
         x + width,
@@ -609,15 +556,11 @@ function roundedRect(
     );
 
 
-    /* RIGHT */
-
     ctx.lineTo(
         x + width,
         y + height - r
     );
 
-
-    /* BOTTOM RIGHT */
 
     ctx.quadraticCurveTo(
         x + width,
@@ -627,15 +570,11 @@ function roundedRect(
     );
 
 
-    /* BOTTOM */
-
     ctx.lineTo(
         x + r,
         y + height
     );
 
-
-    /* BOTTOM LEFT */
 
     ctx.quadraticCurveTo(
         x,
@@ -645,15 +584,11 @@ function roundedRect(
     );
 
 
-    /* LEFT */
-
     ctx.lineTo(
         x,
         y + r
     );
 
-
-    /* TOP LEFT */
 
     ctx.quadraticCurveTo(
         x,
@@ -676,22 +611,16 @@ downloadBtn.addEventListener(
     "click",
     function () {
 
-        /* Render latest version */
-
         drawPoster();
 
 
         try {
-
-            /* Convert canvas to PNG */
 
             const dataURL =
                 canvas.toDataURL(
                     "image/png"
                 );
 
-
-            /* Create temporary link */
 
             const link =
                 document.createElement("a");
@@ -705,21 +634,13 @@ downloadBtn.addEventListener(
                 "Miro-Qwen-Attending-Poster.png";
 
 
-            link.style.display =
-                "none";
-
-
             document.body.appendChild(
                 link
             );
 
 
-            /* Start download */
-
             link.click();
 
-
-            /* Remove temporary link */
 
             document.body.removeChild(
                 link
@@ -729,7 +650,7 @@ downloadBtn.addEventListener(
         } catch (error) {
 
             console.error(
-                "Poster download failed:",
+                "Download failed:",
                 error
             );
 
