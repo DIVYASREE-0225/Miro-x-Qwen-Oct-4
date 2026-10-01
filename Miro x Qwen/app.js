@@ -29,15 +29,21 @@ const reference = new Image();
 let referenceLoaded = false;
 
 reference.onload = function () {
+
     referenceLoaded = true;
+
     drawPoster();
+
 };
 
 reference.onerror = function () {
+
     alert(
         "reference.png could not be loaded.\n\n" +
-        "Make sure reference.png is in the same folder as index.html."
+        "Make sure reference.png is in the same folder " +
+        "as index.html."
     );
+
 };
 
 reference.src = "reference.png";
@@ -63,68 +69,90 @@ let userName = "";
    PHOTO UPLOAD
 ========================================================= */
 
-photoInput.addEventListener("change", function (event) {
+photoInput.addEventListener(
+    "change",
+    function (event) {
 
-    const file = event.target.files[0];
+        const file =
+            event.target.files[0];
 
-    if (!file) {
-        return;
-    }
+        if (!file) {
+            return;
+        }
 
-    /* Check file type */
 
-    if (!file.type.startsWith("image/")) {
+        /* Check file type */
 
-        alert(
-            "Please upload a valid JPG, PNG or WEBP image."
-        );
-
-        photoInput.value = "";
-
-        return;
-    }
-
-    const reader = new FileReader();
-
-    reader.onload = function (e) {
-
-        userPhoto.onload = function () {
-
-            photoLoaded = true;
-
-            drawPoster();
-
-        };
-
-        userPhoto.onerror = function () {
-
-            photoLoaded = false;
+        if (!file.type.startsWith("image/")) {
 
             alert(
-                "Unable to load the selected image."
+                "Please upload a valid JPG, PNG or WEBP image."
             );
 
-        };
+            photoInput.value = "";
 
-        userPhoto.src = e.target.result;
-    };
+            return;
+        }
 
-    reader.readAsDataURL(file);
 
-});
+        /* Read uploaded image */
+
+        const reader =
+            new FileReader();
+
+
+        reader.onload =
+            function (e) {
+
+                userPhoto.onload =
+                    function () {
+
+                        photoLoaded = true;
+
+                        drawPoster();
+
+                    };
+
+
+                userPhoto.onerror =
+                    function () {
+
+                        photoLoaded = false;
+
+                        alert(
+                            "Unable to load the selected image."
+                        );
+
+                    };
+
+
+                userPhoto.src =
+                    e.target.result;
+
+            };
+
+
+        reader.readAsDataURL(file);
+
+    }
+);
 
 
 /* =========================================================
    NAME INPUT
 ========================================================= */
 
-nameInput.addEventListener("input", function () {
+nameInput.addEventListener(
+    "input",
+    function () {
 
-    userName = nameInput.value.trim();
+        userName =
+            nameInput.value.trim();
 
-    drawPoster();
+        drawPoster();
 
-});
+    }
+);
 
 
 /* =========================================================
@@ -143,7 +171,7 @@ function drawPoster() {
     );
 
 
-    /* Wait for reference image */
+    /* Wait for reference */
 
     if (!referenceLoaded) {
         return;
@@ -151,7 +179,7 @@ function drawPoster() {
 
 
     /* =====================================================
-       DRAW ORIGINAL REFERENCE
+       ORIGINAL POSTER
     ===================================================== */
 
     ctx.drawImage(
@@ -164,7 +192,7 @@ function drawPoster() {
 
 
     /* =====================================================
-       DRAW USER PHOTO
+       USER PHOTO
     ===================================================== */
 
     if (photoLoaded) {
@@ -175,7 +203,7 @@ function drawPoster() {
 
 
     /* =====================================================
-       DRAW USER NAME
+       USER NAME
     ===================================================== */
 
     drawUserName();
@@ -190,27 +218,27 @@ function drawPoster() {
 function drawUserPhoto() {
 
     /*
-        PHOTO POSITION AND SIZE
+        PHOTO SETTINGS
 
-        These values are based on the
-        1254 × 1254 reference poster.
+        Change these values only if you want
+        to adjust the photo position/size.
     */
 
     const photo = {
 
-        /* LEFT / RIGHT POSITION */
+        /* LEFT / RIGHT */
 
         centerX: 472,
 
-        /* UP / DOWN POSITION */
+        /* UP / DOWN */
 
         centerY: 500,
 
-        /* PHOTO AREA WIDTH */
+        /* PHOTO WIDTH */
 
         width: 390,
 
-        /* PHOTO AREA HEIGHT */
+        /* PHOTO HEIGHT */
 
         height: 315,
 
@@ -248,7 +276,7 @@ function drawUserPhoto() {
 
 
     /* =====================================================
-       PHOTO CLIPPING AREA
+       PHOTO BOX CLIPPING
     ===================================================== */
 
     ctx.beginPath();
@@ -264,10 +292,11 @@ function drawUserPhoto() {
 
 
     /* =====================================================
-       WHITE PHOTO BACKGROUND
+       WHITE BASE
     ===================================================== */
 
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle =
+        "#ffffff";
 
     ctx.fillRect(
         -photo.width / 2,
@@ -278,7 +307,7 @@ function drawUserPhoto() {
 
 
     /* =====================================================
-       GET ORIGINAL IMAGE DIMENSIONS
+       ORIGINAL IMAGE SIZE
     ===================================================== */
 
     const sourceWidth =
@@ -289,56 +318,33 @@ function drawUserPhoto() {
 
 
     /* =====================================================
-       CONTAIN MODE
+       DRAW COMPLETE IMAGE
 
        IMPORTANT:
 
-       Math.min() ensures that the COMPLETE
-       uploaded image remains visible.
+       We intentionally DO NOT use Math.min()
+       or Math.max() here.
 
-       NOTHING IS CROPPED.
+       The complete uploaded image is resized
+       directly into the photo box.
 
-       The original aspect ratio is preserved.
-    ===================================================== */
+       Therefore:
 
-    const scale =
-        Math.min(
-            photo.width / sourceWidth,
-            photo.height / sourceHeight
-        );
+       ✔ No cropping
+       ✔ No white space
+       ✔ Complete photo visible
+       ✔ Entire photo box filled
 
-
-    /* =====================================================
-       CALCULATE FINAL IMAGE SIZE
-    ===================================================== */
-
-    const drawWidth =
-        sourceWidth * scale;
-
-    const drawHeight =
-        sourceHeight * scale;
-
-
-    /* =====================================================
-       CENTER COMPLETE IMAGE
-    ===================================================== */
-
-    const drawX =
-        -drawWidth / 2;
-
-    const drawY =
-        -drawHeight / 2;
-
-
-    /* =====================================================
-       DRAW COMPLETE USER IMAGE
+       The image may stretch slightly if its
+       original aspect ratio differs from the
+       poster photo box.
     ===================================================== */
 
     ctx.drawImage(
 
         userPhoto,
 
-        /* Source */
+        /* Source image */
 
         0,
         0,
@@ -347,10 +353,11 @@ function drawUserPhoto() {
 
         /* Destination */
 
-        drawX,
-        drawY,
-        drawWidth,
-        drawHeight
+        -photo.width / 2,
+        -photo.height / 2,
+
+        photo.width,
+        photo.height
 
     );
 
@@ -369,9 +376,8 @@ function drawUserName() {
     /*
         NAME BAR
 
-        Keep these values unchanged because
-        this position was already matching
-        your reference.
+        These values are intentionally kept
+        the same as your previous version.
     */
 
     const box = {
@@ -399,7 +405,7 @@ function drawUserName() {
 
 
     /* =====================================================
-       MOVE TO NAME BAR CENTER
+       MOVE TO NAME BAR
     ===================================================== */
 
     ctx.translate(
@@ -419,13 +425,8 @@ function drawUserName() {
        COVER ORIGINAL NAME
     ===================================================== */
 
-    /*
-        This covers the original name while
-        keeping the outer reference design
-        visible.
-    */
-
-    ctx.fillStyle = "#fff0a8";
+    ctx.fillStyle =
+        "#fff0a8";
 
 
     roundedRect(
@@ -450,12 +451,14 @@ function drawUserName() {
        GET USER NAME
     ===================================================== */
 
-    let name = userName;
+    let name =
+        userName;
 
 
     if (!name) {
 
-        name = "Your Name";
+        name =
+            "Your Name";
 
     }
 
@@ -464,24 +467,29 @@ function drawUserName() {
        TEXT SETTINGS
     ===================================================== */
 
-    ctx.textAlign = "center";
+    ctx.textAlign =
+        "center";
 
-    ctx.textBaseline = "middle";
+    ctx.textBaseline =
+        "middle";
 
-    ctx.fillStyle = "#17205f";
+    ctx.fillStyle =
+        "#17205f";
 
 
     /* =====================================================
        AUTOMATIC FONT SIZE
     ===================================================== */
 
-    let fontSize = 34;
+    let fontSize =
+        34;
 
 
     while (fontSize > 18) {
 
         ctx.font =
             `700 ${fontSize}px Arial`;
+
 
         if (
             ctx.measureText(name).width
@@ -493,16 +501,18 @@ function drawUserName() {
 
         }
 
+
         fontSize--;
 
     }
 
 
     /* =====================================================
-       HANDLE VERY LONG NAMES
+       HANDLE LONG NAMES
     ===================================================== */
 
-    let displayName = name;
+    let displayName =
+        name;
 
 
     while (
@@ -522,9 +532,11 @@ function drawUserName() {
     }
 
 
-    /* Add ellipsis if name was shortened */
+    /* Add ... if shortened */
 
-    if (displayName !== name) {
+    if (
+        displayName !== name
+    ) {
 
         displayName += "...";
 
@@ -571,7 +583,7 @@ function roundedRect(
     ctx.beginPath();
 
 
-    /* Top-left */
+    /* TOP LEFT */
 
     ctx.moveTo(
         x + r,
@@ -579,7 +591,7 @@ function roundedRect(
     );
 
 
-    /* Top */
+    /* TOP */
 
     ctx.lineTo(
         x + width - r,
@@ -587,7 +599,7 @@ function roundedRect(
     );
 
 
-    /* Top-right */
+    /* TOP RIGHT */
 
     ctx.quadraticCurveTo(
         x + width,
@@ -597,7 +609,7 @@ function roundedRect(
     );
 
 
-    /* Right */
+    /* RIGHT */
 
     ctx.lineTo(
         x + width,
@@ -605,7 +617,7 @@ function roundedRect(
     );
 
 
-    /* Bottom-right */
+    /* BOTTOM RIGHT */
 
     ctx.quadraticCurveTo(
         x + width,
@@ -615,7 +627,7 @@ function roundedRect(
     );
 
 
-    /* Bottom */
+    /* BOTTOM */
 
     ctx.lineTo(
         x + r,
@@ -623,7 +635,7 @@ function roundedRect(
     );
 
 
-    /* Bottom-left */
+    /* BOTTOM LEFT */
 
     ctx.quadraticCurveTo(
         x,
@@ -633,7 +645,7 @@ function roundedRect(
     );
 
 
-    /* Left */
+    /* LEFT */
 
     ctx.lineTo(
         x,
@@ -641,7 +653,7 @@ function roundedRect(
     );
 
 
-    /* Close */
+    /* TOP LEFT */
 
     ctx.quadraticCurveTo(
         x,
@@ -664,7 +676,7 @@ downloadBtn.addEventListener(
     "click",
     function () {
 
-        /* Redraw latest version */
+        /* Render latest version */
 
         drawPoster();
 
@@ -707,11 +719,12 @@ downloadBtn.addEventListener(
             link.click();
 
 
-            /* Remove link */
+            /* Remove temporary link */
 
             document.body.removeChild(
                 link
             );
+
 
         } catch (error) {
 
