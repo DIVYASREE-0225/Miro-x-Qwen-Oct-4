@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Miro × Qwen - I'm Attending</title>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <main class="app">
+
+        <h1>Miro × Qwen Event Poster</h1>
+
+        <div class="controls">
+
+            <div class="control">
+                <label for="photoInput">
+                    Upload Your Photo
+                </label>
+
+                <input
+                    id="photoInput"
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                >
+            </div>
+
+
+            <div class="control">
+                <label for="nameInput">
+                    Enter Your Name
+                </label>
+
+                <input
+                    id="nameInput"
+                    type="text"
+                    maxlength="30"
+                    placeholder="Enter your name"
+                    autocomplete="off"
+                >
+            </div>
+
+
+            <button
+                id="downloadBtn"
+                type="button"
+            >
+                Download Poster
+            </button>
+
+        </div>
+
+
+        <div class="poster-wrapper">
+
+            <canvas
+                id="posterCanvas"
+                width="1254"
+                height="1254"
+            ></canvas>
+
+        </div>
+
+    </main>
+
+    <script src="app.js"></script>
+
+</body>
+</html>
